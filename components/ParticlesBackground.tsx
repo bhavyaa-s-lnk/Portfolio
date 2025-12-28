@@ -23,12 +23,22 @@ const ParticlesBackground = () => {
 
   return (
     <>
-      <Script src="/particles/particles.min.js" strategy="beforeInteractive" />
+      <Script
+        src="/particles/particles.min.js"
+        strategy="beforeInteractive"
+        onLoad={() => {
+          if (window.particlesJS) {
+            console.log('Particles script loaded, initializing');
+            window.particlesJS.load('particles-js', '/particles/particles.json');
+          } else {
+            console.warn('Particles script loaded but particlesJS not found');
+          }
+        }}
+      />
       <div
         id="particles-js"
-        className="fixed top-0 left-0 w-full h-full z-[2] pointer-events-auto"
-
-         // Needed for interaction
+        className="fixed inset-0 z-0 pointer-events-none"
+        // container for particles
       />
     </>
   );
