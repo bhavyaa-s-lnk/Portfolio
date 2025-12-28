@@ -99,67 +99,61 @@ const ParticlesBackground = () => {
       resizeCanvas();
       window.addEventListener('resize', resizeCanvas);
 
-      const particles = Array.from({ length: 60 }).map(() => ({
+      const colors = ['rgba(139,92,246,0.85)', 'rgba(56,189,248,0.85)'];
+      const particles = Array.from({ length: 30 }).map(() => ({
         x: Math.random() * container.clientWidth,
         y: Math.random() * container.clientHeight,
-        vx: (Math.random() - 0.5) * 1.6,
-        vy: (Math.random() - 0.5) * 1.6,
-        r: 3 + Math.random() * 6, // bigger radius for visibility
-        c: `rgba(${200 + Math.round(Math.random()*55)},${180 + Math.round(Math.random()*55)},30,${0.7 + Math.random()*0.3})`,
+        vx: (Math.random() - 0.5) * 1.0,
+        vy: (Math.random() - 0.5) * 1.0,
+        r: 2 + Math.random() * 3,
+        c: colors[Math.floor(Math.random() * colors.length)],
       }));
 
       function draw() {
         if (!ctx || !demoCanvas) return;
         ctx.clearRect(0, 0, demoCanvas.width, demoCanvas.height);
 
-        // faint background tint to help visibility
-        ctx.fillStyle = 'rgba(0,0,0,0.12)';
+        // faint background tint to help visibility (very subtle)
+        ctx.fillStyle = 'rgba(0,0,0,0.06)';
         ctx.fillRect(0, 0, demoCanvas.width, demoCanvas.height);
 
-        for (const p of particles) {
+        // draw connecting lines sparingly
+        for (let i = 0; i < particles.length; i++) {
+          const p = particles[i];
           p.x += p.vx;
           p.y += p.vy;
+
+          // wrap around edges for smooth motion
           if (p.x < -10) p.x = container.clientWidth + 10;
           if (p.x > container.clientWidth + 10) p.x = -10;
           if (p.y < -10) p.y = container.clientHeight + 10;
           if (p.y > container.clientHeight + 10) p.y = -10;
 
-          // draw connecting lines for better effect
-          for (const q of particles) {
+          // light connections to nearby particles only
+          for (let j = i + 1; j < particles.length; j++) {
+            const q = particles[j];
             const dx = p.x - q.x;
             const dy = p.y - q.y;
-            const dist = Math.sqrt(dx*dx + dy*dy);
-            if (dist < 140) {
+            const dist = Math.sqrt(dx * dx + dy * dy);
+            if (dist < 100) {
               ctx.beginPath();
-              ctx.strokeStyle = 'rgba(255,230,150,0.07)';
-              ctx.lineWidth = 1;
+              ctx.strokeStyle = 'rgba(140,100,230,0.06)';
+              ctx.lineWidth = 0.6;
               ctx.moveTo(p.x, p.y);
               ctx.lineTo(q.x, q.y);
               ctx.stroke();
             }
           }
-
-          ctx.beginPath();
-          ctx.fillStyle = p.c;
-          ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
-          ctx.fill();
         }
-        rafId = requestAnimationFrame(draw);
-      }
 
-      function draw() {
-        if (!ctx || !demoCanvas) return;
-        ctx.clearRect(0, 0, demoCanvas.width, demoCanvas.height);
+        // draw particles on top of lines
         for (const p of particles) {
-          p.x += p.vx;
-          p.y += p.vy;
-          if (p.x < 0 || p.x > container.clientWidth) p.vx *= -1;
-          if (p.y < 0 || p.y > container.clientHeight) p.vy *= -1;
           ctx.beginPath();
           ctx.fillStyle = p.c;
           ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
           ctx.fill();
         }
+
         rafId = requestAnimationFrame(draw);
       }
 
