@@ -89,17 +89,19 @@ const ParticlesBackground = () => {
     let demoCanvas: HTMLCanvasElement | null = null;
 
     function setupDemoCanvas() {
-      if (!container) return;
+      // Always append demo canvas to the document body to guarantee visibility
+      // but keep it non-interactive and behind most content (z-index:0)
+      if (demoCanvas && demoCanvas.parentNode) demoCanvas.parentNode.removeChild(demoCanvas);
       demoCanvas = document.createElement('canvas');
       demoCanvas.id = 'particles-demo-canvas';
-      demoCanvas.style.cssText = 'position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z-index:0';
-      container.appendChild(demoCanvas);
+      demoCanvas.style.cssText = 'position:fixed;inset:0;width:100%;height:100%;pointer-events:none;z-index:0;mix-blend-mode:normal';
+      document.body.appendChild(demoCanvas);
       const ctx = demoCanvas.getContext('2d');
       const DPR = window.devicePixelRatio || 1;
 
       function resizeCanvas() {
-        demoCanvas!.width = container.clientWidth * DPR;
-        demoCanvas!.height = container.clientHeight * DPR;
+        demoCanvas!.width = Math.max(window.innerWidth, 300) * DPR;
+        demoCanvas!.height = Math.max(window.innerHeight, 200) * DPR;
         demoCanvas!.style.width = '100%';
         demoCanvas!.style.height = '100%';
         if (ctx) ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
@@ -108,13 +110,13 @@ const ParticlesBackground = () => {
       resizeCanvas();
       window.addEventListener('resize', resizeCanvas);
 
-      const colors = ['rgba(139,92,246,0.85)', 'rgba(56,189,248,0.85)'];
-      const particles = Array.from({ length: 30 }).map(() => ({
-        x: Math.random() * container.clientWidth,
-        y: Math.random() * container.clientHeight,
-        vx: (Math.random() - 0.5) * 1.0,
-        vy: (Math.random() - 0.5) * 1.0,
-        r: 2 + Math.random() * 3,
+      // Position particles relative to viewport when canvas is on body
+      const particles = Array.from({ length: 18 }).map(() => ({
+        x: Math.random() * window.innerWidth,
+        y: Math.random() * window.innerHeight,
+        vx: (Math.random() - 0.5) * 0.6,
+        vy: (Math.random() - 0.5) * 0.6,
+        r: 1.5 + Math.random() * 2.5,
         c: colors[Math.floor(Math.random() * colors.length)],
       }));
 
@@ -122,32 +124,31 @@ const ParticlesBackground = () => {
         if (!ctx || !demoCanvas) return;
         ctx.clearRect(0, 0, demoCanvas.width, demoCanvas.height);
 
-        // faint background tint to help visibility (very subtle)
-        ctx.fillStyle = 'rgba(0,0,0,0.06)';
+        // very subtle tint to increase contrast
+        ctx.fillStyle = 'rgba(0,0,0,0.04)';
         ctx.fillRect(0, 0, demoCanvas.width, demoCanvas.height);
 
-        // draw connecting lines sparingly
+        // draw connections sparingly
         for (let i = 0; i < particles.length; i++) {
           const p = particles[i];
           p.x += p.vx;
           p.y += p.vy;
 
-          // wrap around edges for smooth motion
-          if (p.x < -10) p.x = container.clientWidth + 10;
-          if (p.x > container.clientWidth + 10) p.x = -10;
-          if (p.y < -10) p.y = container.clientHeight + 10;
-          if (p.y > container.clientHeight + 10) p.y = -10;
+          // wrap around viewport
+          if (p.x < -20) p.x = window.innerWidth + 20;
+          if (p.x > window.innerWidth + 20) p.x = -20;
+          if (p.y < -20) p.y = window.innerHeight + 20;
+          if (p.y > window.innerHeight + 20) p.y = -20;
 
-          // light connections to nearby particles only
           for (let j = i + 1; j < particles.length; j++) {
             const q = particles[j];
             const dx = p.x - q.x;
             const dy = p.y - q.y;
             const dist = Math.sqrt(dx * dx + dy * dy);
-            if (dist < 100) {
+            if (dist < 90) {
               ctx.beginPath();
               ctx.strokeStyle = 'rgba(140,100,230,0.06)';
-              ctx.lineWidth = 0.6;
+              ctx.lineWidth = 0.5;
               ctx.moveTo(p.x, p.y);
               ctx.lineTo(q.x, q.y);
               ctx.stroke();
@@ -155,7 +156,7 @@ const ParticlesBackground = () => {
           }
         }
 
-        // draw particles on top of lines
+        // draw particles last
         for (const p of particles) {
           ctx.beginPath();
           ctx.fillStyle = p.c;
