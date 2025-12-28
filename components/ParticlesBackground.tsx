@@ -74,10 +74,72 @@ const ParticlesBackground = () => {
     };
     document.head.appendChild(script);
 
+    // create a small inline canvas demo so there's always visible motion for local testing
+    const container = document.getElementById('particles-js');
+    let rafId: number | null = null;
+    let demoCanvas: HTMLCanvasElement | null = null;
+
+    function setupDemoCanvas() {
+      if (!container) return;
+      demoCanvas = document.createElement('canvas');
+      demoCanvas.id = 'particles-demo-canvas';
+      demoCanvas.style.cssText = 'position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z-index:0';
+      container.appendChild(demoCanvas);
+      const ctx = demoCanvas.getContext('2d');
+      const DPR = window.devicePixelRatio || 1;
+
+      function resizeCanvas() {
+        demoCanvas!.width = container.clientWidth * DPR;
+        demoCanvas!.height = container.clientHeight * DPR;
+        demoCanvas!.style.width = '100%';
+        demoCanvas!.style.height = '100%';
+        if (ctx) ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+      }
+
+      resizeCanvas();
+      window.addEventListener('resize', resizeCanvas);
+
+      const particles = Array.from({ length: 80 }).map(() => ({
+        x: Math.random() * container.clientWidth,
+        y: Math.random() * container.clientHeight,
+        vx: (Math.random() - 0.5) * 1.2,
+        vy: (Math.random() - 0.5) * 1.2,
+        r: 1 + Math.random() * 3,
+        c: `rgba(56,189,248,${0.4 + Math.random() * 0.6})`,
+      }));
+
+      function draw() {
+        if (!ctx || !demoCanvas) return;
+        ctx.clearRect(0, 0, demoCanvas.width, demoCanvas.height);
+        for (const p of particles) {
+          p.x += p.vx;
+          p.y += p.vy;
+          if (p.x < 0 || p.x > container.clientWidth) p.vx *= -1;
+          if (p.y < 0 || p.y > container.clientHeight) p.vy *= -1;
+          ctx.beginPath();
+          ctx.fillStyle = p.c;
+          ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+          ctx.fill();
+        }
+        rafId = requestAnimationFrame(draw);
+      }
+
+      rafId = requestAnimationFrame(draw);
+
+      return () => {
+        if (rafId) cancelAnimationFrame(rafId);
+        window.removeEventListener('resize', resizeCanvas);
+        if (demoCanvas && demoCanvas.parentNode) demoCanvas.parentNode.removeChild(demoCanvas);
+      };
+    }
+
+    const cleanupDemo = setupDemoCanvas();
+
     // cleanup if component unmounts
     return () => {
       const badge = document.getElementById('particles-debug');
       if (badge) badge.remove();
+      if (cleanupDemo) cleanupDemo();
     };
   }, []);
 
