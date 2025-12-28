@@ -87,6 +87,7 @@ const ParticlesBackground = () => {
     const container = document.getElementById('particles-js');
     let rafId: number | null = null;
     let demoCanvas: HTMLCanvasElement | null = null;
+    const colors = ['rgba(139,92,246,0.85)', 'rgba(56,189,248,0.85)'];
 
     function setupDemoCanvas() {
       // Always append demo canvas to the document body to guarantee visibility
