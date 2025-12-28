@@ -17,17 +17,17 @@ const ParticlesBackground = () => {
     const initParticles = () => {
       const demoConfig = {
         particles: {
-          number: { value: 24 },
-          color: { value: '#8b5cf6' },
-          size: { value: 3 },
-          line_linked: { enable: true, distance: 90, color: '#8b5cf6', opacity: 0.04, width: 0.5 }
+          number: { value: 48 },
+          color: { value: ['#8b5cf6', '#06b6d4', '#ffffff'] },
+          size: { value: 3.4 },
+          line_linked: { enable: true, distance: 120, color: '#8b5cf6', opacity: 0.12, width: 0.6 }
         },
         interactivity: {
           events: {
             onhover: { enable: true, mode: 'repulse' },
             onclick: { enable: true, mode: 'push' }
           },
-          modes: { repulse: { distance: 100, duration: 0.4 }, push: { particles_nb: 3 } }
+          modes: { repulse: { distance: 120, duration: 0.45 }, push: { particles_nb: 4 } }
         }
       };
 
@@ -64,16 +64,26 @@ const ParticlesBackground = () => {
     const container = document.getElementById('particles-js');
     let rafId: number | null = null;
     let demoCanvas: HTMLCanvasElement | null = null;
-    const colors = ['rgba(139,92,246,0.85)', 'rgba(56,189,248,0.85)'];
+    const colors = ['rgba(139,92,246,0.95)', 'rgba(56,189,248,0.95)', 'rgba(255,255,255,0.9)'];
 
     function setupDemoCanvas() {
       // Always append demo canvas to the document body to guarantee visibility
-      // but keep it non-interactive and behind most content (z-index:0)
+      // keep it non-interactive and behind content (z-index:-1) and use screen blend to make it pop
       if (demoCanvas && demoCanvas.parentNode) demoCanvas.parentNode.removeChild(demoCanvas);
       demoCanvas = document.createElement('canvas');
       demoCanvas.id = 'particles-demo-canvas';
-      demoCanvas.style.cssText = 'position:fixed;inset:0;width:100%;height:100%;pointer-events:none;z-index:0;mix-blend-mode:normal';
+      // bring canvas above content so particles are always visible, but keep it non-interactive
+      demoCanvas.style.cssText = 'position:fixed;inset:0;width:100%;height:100%;pointer-events:none;z-index:40;mix-blend-mode:normal;opacity:1';
       document.body.appendChild(demoCanvas);
+      console.log('particles: demo canvas appended to body');
+      // tiny persistent status dot so you can see if the demo canvas was created
+      let status = document.getElementById('particles-status');
+      if (!status) {
+        status = document.createElement('div');
+        status.id = 'particles-status';
+        status.style.cssText = 'position:fixed;left:10px;bottom:10px;width:12px;height:12px;border-radius:999px;background:#06b6d4;box-shadow:0 0 8px rgba(6,182,212,0.8);z-index:50;pointer-events:none';
+        document.body.appendChild(status);
+      }
       const ctx = demoCanvas.getContext('2d');
       const DPR = window.devicePixelRatio || 1;
 
@@ -89,24 +99,29 @@ const ParticlesBackground = () => {
       window.addEventListener('resize', resizeCanvas);
 
       // Position particles relative to viewport when canvas is on body
-      const particles = Array.from({ length: 18 }).map(() => ({
+      const particles = Array.from({ length: 56 }).map(() => ({
         x: Math.random() * window.innerWidth,
         y: Math.random() * window.innerHeight,
-        vx: (Math.random() - 0.5) * 0.6,
-        vy: (Math.random() - 0.5) * 0.6,
-        r: 1.5 + Math.random() * 2.5,
+        vx: (Math.random() - 0.5) * 1.3,
+        vy: (Math.random() - 0.5) * 1.3,
+        r: 2.8 + Math.random() * 3.6,
         c: colors[Math.floor(Math.random() * colors.length)],
       }));
+
+      console.log('particles: demo started — count=', particles.length);
 
       function draw() {
         if (!ctx || !demoCanvas) return;
         ctx.clearRect(0, 0, demoCanvas.width, demoCanvas.height);
 
-        // very subtle tint to increase contrast
-        ctx.fillStyle = 'rgba(0,0,0,0.04)';
+        // subtle background tint to increase contrast
+        ctx.fillStyle = 'rgba(0,0,0,0.02)';
         ctx.fillRect(0, 0, demoCanvas.width, demoCanvas.height);
 
-        // draw connections sparingly
+        // use additive blending for glow
+        ctx.globalCompositeOperation = 'lighter';
+
+        // draw connections sparingly but more visible
         for (let i = 0; i < particles.length; i++) {
           const p = particles[i];
           p.x += p.vx;
@@ -123,10 +138,10 @@ const ParticlesBackground = () => {
             const dx = p.x - q.x;
             const dy = p.y - q.y;
             const dist = Math.sqrt(dx * dx + dy * dy);
-            if (dist < 90) {
+            if (dist < 140) {
               ctx.beginPath();
-              ctx.strokeStyle = 'rgba(140,100,230,0.06)';
-              ctx.lineWidth = 0.5;
+              ctx.strokeStyle = 'rgba(140,100,230,0.28)';
+              ctx.lineWidth = 0.9;
               ctx.moveTo(p.x, p.y);
               ctx.lineTo(q.x, q.y);
               ctx.stroke();
@@ -134,7 +149,8 @@ const ParticlesBackground = () => {
           }
         }
 
-        // draw particles last
+        // draw particles last (ensure particle fills remain bright)
+        ctx.globalCompositeOperation = 'source-over';
         for (const p of particles) {
           ctx.beginPath();
           ctx.fillStyle = p.c;
@@ -151,6 +167,8 @@ const ParticlesBackground = () => {
         if (rafId) cancelAnimationFrame(rafId);
         window.removeEventListener('resize', resizeCanvas);
         if (demoCanvas && demoCanvas.parentNode) demoCanvas.parentNode.removeChild(demoCanvas);
+        const statusEl = document.getElementById('particles-status');
+        if (statusEl) statusEl.remove();
       };
     }
 
