@@ -99,14 +99,53 @@ const ParticlesBackground = () => {
       resizeCanvas();
       window.addEventListener('resize', resizeCanvas);
 
-      const particles = Array.from({ length: 80 }).map(() => ({
+      const particles = Array.from({ length: 60 }).map(() => ({
         x: Math.random() * container.clientWidth,
         y: Math.random() * container.clientHeight,
-        vx: (Math.random() - 0.5) * 1.2,
-        vy: (Math.random() - 0.5) * 1.2,
-        r: 1 + Math.random() * 3,
-        c: `rgba(56,189,248,${0.4 + Math.random() * 0.6})`,
+        vx: (Math.random() - 0.5) * 1.6,
+        vy: (Math.random() - 0.5) * 1.6,
+        r: 3 + Math.random() * 6, // bigger radius for visibility
+        c: `rgba(${200 + Math.round(Math.random()*55)},${180 + Math.round(Math.random()*55)},30,${0.7 + Math.random()*0.3})`,
       }));
+
+      function draw() {
+        if (!ctx || !demoCanvas) return;
+        ctx.clearRect(0, 0, demoCanvas.width, demoCanvas.height);
+
+        // faint background tint to help visibility
+        ctx.fillStyle = 'rgba(0,0,0,0.12)';
+        ctx.fillRect(0, 0, demoCanvas.width, demoCanvas.height);
+
+        for (const p of particles) {
+          p.x += p.vx;
+          p.y += p.vy;
+          if (p.x < -10) p.x = container.clientWidth + 10;
+          if (p.x > container.clientWidth + 10) p.x = -10;
+          if (p.y < -10) p.y = container.clientHeight + 10;
+          if (p.y > container.clientHeight + 10) p.y = -10;
+
+          // draw connecting lines for better effect
+          for (const q of particles) {
+            const dx = p.x - q.x;
+            const dy = p.y - q.y;
+            const dist = Math.sqrt(dx*dx + dy*dy);
+            if (dist < 140) {
+              ctx.beginPath();
+              ctx.strokeStyle = 'rgba(255,230,150,0.07)';
+              ctx.lineWidth = 1;
+              ctx.moveTo(p.x, p.y);
+              ctx.lineTo(q.x, q.y);
+              ctx.stroke();
+            }
+          }
+
+          ctx.beginPath();
+          ctx.fillStyle = p.c;
+          ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+          ctx.fill();
+        }
+        rafId = requestAnimationFrame(draw);
+      }
 
       function draw() {
         if (!ctx || !demoCanvas) return;
@@ -147,8 +186,8 @@ const ParticlesBackground = () => {
     <>
       <div
         id="particles-js"
-        className="fixed inset-0 z-0 pointer-events-none"
-        // container for particles
+        className="fixed inset-0 z-40 pointer-events-none outline-2 outline-offset-[-4px] outline-dashed outline-sky-500"
+        // container for particles (temporarily brought forward and highlighted for debugging)
       />
     </>
   );
