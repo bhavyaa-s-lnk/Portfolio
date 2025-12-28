@@ -50,7 +50,7 @@
     "git-filter-repo": "^0.0.30",
     "input-otp": "1.4.1",
     "lucide-react": "^0.454.0",
-    "next": "15.2.4",
+    "next": "^16.1.1",
     "next-themes": "^0.4.4",
     "particle.js": "^1.0.7",
     "react": "^19.2.3",
