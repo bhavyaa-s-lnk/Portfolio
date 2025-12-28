@@ -29,17 +29,17 @@ const ParticlesBackground = () => {
     const initParticles = () => {
       const demoConfig = {
         particles: {
-          number: { value: 140 },
+          number: { value: 24 },
           color: { value: '#8b5cf6' },
-          size: { value: 4 },
-          line_linked: { enable: true, distance: 220, color: '#8b5cf6', opacity: 0.6, width: 1 }
+          size: { value: 3 },
+          line_linked: { enable: true, distance: 90, color: '#8b5cf6', opacity: 0.04, width: 0.5 }
         },
         interactivity: {
           events: {
             onhover: { enable: true, mode: 'repulse' },
             onclick: { enable: true, mode: 'push' }
           },
-          modes: { repulse: { distance: 160, duration: 0.4 }, push: { particles_nb: 6 } }
+          modes: { repulse: { distance: 100, duration: 0.4 }, push: { particles_nb: 3 } }
         }
       };
 
@@ -47,9 +47,18 @@ const ParticlesBackground = () => {
         if ((window as any).particlesJS && typeof (window as any).particlesJS === 'function') {
           (window as any).particlesJS('particles-js', demoConfig);
           updateDebug('initialized (cdn)', '#10b981');
+          // hide debug badge shortly after init
+          setTimeout(() => {
+            const b = document.getElementById('particles-debug');
+            if (b) b.style.display = 'none';
+          }, 3000);
         } else if ((window as any).particlesJS && typeof (window as any).particlesJS.load === 'function') {
           (window as any).particlesJS.load('particles-js', demoConfig);
           updateDebug('initialized (cdn)', '#10b981');
+          setTimeout(() => {
+            const b = document.getElementById('particles-debug');
+            if (b) b.style.display = 'none';
+          }, 3000);
         } else {
           throw new Error('particlesJS missing after load');
         }
@@ -180,8 +189,8 @@ const ParticlesBackground = () => {
     <>
       <div
         id="particles-js"
-        className="fixed inset-0 z-40 pointer-events-none outline-2 outline-offset-[-4px] outline-dashed outline-sky-500"
-        // container for particles (temporarily brought forward and highlighted for debugging)
+        className="fixed inset-0 z-0 pointer-events-none"
+        // container for particles (now behind content)
       />
     </>
   );
